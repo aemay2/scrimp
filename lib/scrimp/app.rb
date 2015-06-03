@@ -6,7 +6,7 @@ require 'sinatra/base'
 module Scrimp
   class App < Sinatra::Base
     set :static, true
-    set :public, File.expand_path('../public', __FILE__)
+    set :public_folder, File.expand_path('../public', __FILE__)
     set :views, File.expand_path('../views', __FILE__)
     set :haml, :format => :html5
 
@@ -55,6 +55,19 @@ module Scrimp
       protocols.to_json
     end
 
+    get '/transports' do
+      transports = {'Thrift::BufferedTransport'=>'Thrift::BufferedTransport',
+                    'Thrift::FramedTransport'=>'Thrift::FramedTransport'}
+      content_type :json
+      transports.to_json
+    end
+
+    get '/sockets' do
+      sockets = {'Thrift::Socket'=>'Thrift::Socket'}
+      content_type :json
+      sockets.to_json
+    end
+
     get '/structs' do
       structs = {}
       ThriftUtil.all_structs.each do |struct|
@@ -88,7 +101,8 @@ module Scrimp
       end.compact
 
       begin
-        transport = Thrift::FramedTransport.new Thrift::Socket.new(invocation['host'], invocation['port'])
+        socket = Object::const_get(invocation['socket']).new(invocation['host'], invocation['port'])
+        transport = Object::const_get(invocation['transport']).new(socket)
         protocol_class = ThriftUtil.qualified_const invocation['protocol']
         protocol = protocol_class.new transport
         client = service_class.const_get('Client').new protocol

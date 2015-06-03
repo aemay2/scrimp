@@ -4,6 +4,8 @@ default_request = ->
   request =
     service: (service for service of Scrimp.services)[0]
     protocol: (protocol for protocol of Scrimp.protocols)[0]
+    transport: (transport for transport of Scrimp.transports)[0]
+    socket: (socket for socket of Scrimp.sockets)[0]
     host: "localhost"
     port: 9000
     args: {}
@@ -22,8 +24,20 @@ load_structs = (data) ->
 load_protocols = (data) ->
   Scrimp.protocols = data
   for protocol of Scrimp.protocols
-     option = $('<option>').val(protocol).text(protocol)
-     $('select.protocol-field').append(option)
+    option = $('<option>').val(protocol).text(protocol)
+    $('select.protocol-field').append(option)
+
+load_transports = (data) ->
+  Scrimp.transports = data
+  for transport of Scrimp.transports
+    option = $('<option>').val(transport).text(transport)
+    $('select.transport-field').append(option)
+
+load_sockets = (data) ->
+  Scrimp.sockets = data
+  for socket of Scrimp.sockets
+    option = $('<option>').val(socket).text(socket)
+    $('select.socket-field').append(option)
 
 service_changed = ->
   $('select.function-field').empty()
@@ -150,6 +164,8 @@ load_structured_request = ->
   $('select.function-field').val(parsed.function)
   function_changed()
   $('select.protocol-field').val(parsed.protocol)
+  $('select.socket-field').val(parsed.socket)
+  $('select.transport-field').val(parsed.transport)
   $('input.host-field').val(parsed.host)
   $('input.port-field').val(parsed.port)
   true
@@ -189,6 +205,8 @@ build_raw_request = ->
     service: $('select.service-field').val()
     function: $('select.function-field').val()
     protocol: $('select.protocol-field').val()
+    transport: $('select.transport-field').val()
+    socket: $('select.socket-field').val()
     host: $('input.host-field').val()
     port: $('input.port-field').val()
     args: build_json_for_field($('.args-field'))
@@ -279,6 +297,14 @@ $ ->
   $.ajax
     success: load_protocols
     url: '/protocols'
+    async: false
+  $.ajax
+    success: load_transports
+    url: '/transports'
+    async: false
+  $.ajax
+    success: load_sockets
+    url: '/sockets'
     async: false
   $('select.service-field').change(service_changed)
   $('select.function-field').change(function_changed)
