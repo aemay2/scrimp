@@ -2,6 +2,7 @@
 
 require 'optparse'
 require 'tmpdir'
+require 'scrimp'
 
 options = {host: 'localhost',
            port: 9000,
@@ -9,7 +10,9 @@ options = {host: 'localhost',
            protocol: 'Thrift::CompactProtocolFactory',
            transport: 'Thrift::FramedTransportFactory',
            socket: 'Thrift::ServerSocket',
-           server: 'Thrift::SimpleServer'
+           server: 'Thrift::SimpleServer',
+           cert: 'sample/testing_hosting.pem',
+           key: 'sample/testing_hosting.key'
           }
 parser = OptionParser.new do |op|
   op.on '--host HOST', 'host to launch Thrift server on' do |host|
@@ -27,11 +30,17 @@ parser = OptionParser.new do |op|
   op.on '--transport TRANSPORT', 'transport ( Thrift::BufferedTransportFactory, Thrift::FramedTransportFactory )' do |trans|
     options[:transport] = trans
   end
-  op.on '--socket SOCKET', 'socket ( Thrift::ServerSocket )' do |sock|
+  op.on '--socket SOCKET', 'socket ( Thrift::ServerSocket Thrift::SSLServerSocket )' do |sock|
     options[:socket] = sock
   end
   op.on '--server SERVER', 'server ( Thrift::SimpleServer )' do |serv|
     options[:server] = serv
+  end
+  op.on '--cert CERT', 'cert ( hosting.pem )' do |cert|
+    options[:cert] = cert
+  end
+  op.on '--key KEY', 'key ( hosting.key )' do |key|
+    options[:key] = key
   end
   op.on '-h', '--help' do
     puts parser
@@ -99,7 +108,8 @@ end
 processor = ExampleServiceImpl::Processor.new(ExampleServiceImpl.new)
 
 # Here's the dynamic part
-socket = Object::const_get(options[:socket]).new(options[:host], options[:port])
+socket_args = options[:socket] == "Thrift::SSLServerSocket" ? [options[:host], options[:port], options[:key] ,options[:cert]] : [options[:host], options[:port]]
+socket = Object::const_get(options[:socket]).new(*socket_args)
 transport = Object::const_get(options[:transport]).new
 protocol = Object::const_get(options[:protocol]).new
 server = Object::const_get(options[:server]).new(processor, socket, transport, protocol)
