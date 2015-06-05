@@ -102,9 +102,9 @@ module Scrimp
       end.compact
 
       begin
-        socket = Object::const_get(invocation['socket']).new(invocation['host'], invocation['port'])
-        transport = Object::const_get(invocation['transport']).new(socket)
-        protocol_class = ThriftUtil.qualified_const invocation['protocol']
+        socket = Object::const_get(invocation['socket']||'Thrift::Socket').new(invocation['host'], invocation['port'])
+        transport = Object::const_get(invocation['transport']||'Thrift::FramedTransport').new(socket)
+        protocol_class = ThriftUtil.qualified_const invocation['protocol']||'Thrift::CompactProtocol'
         protocol = protocol_class.new transport
         client = service_class.const_get('Client').new protocol
         transport.open
