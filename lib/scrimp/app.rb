@@ -63,7 +63,8 @@ module Scrimp
     end
 
     get '/sockets' do
-      sockets = {'Thrift::Socket'=>'Thrift::Socket'}
+      sockets = {'Thrift::Socket'=>'Thrift::Socket',
+                 'Thrift::SSLSocket'=>'Thrift::SSLSocket'}
       content_type :json
       sockets.to_json
     end
