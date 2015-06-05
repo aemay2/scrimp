@@ -3,14 +3,35 @@
 require 'optparse'
 require 'tmpdir'
 
-options = {port: 9000,
-           thrift_command: 'thrift'}
+options = {host: 'localhost',
+           port: 9000,
+           thrift_command: 'thrift',
+           protocol: 'Thrift::CompactProtocolFactory',
+           transport: 'Thrift::FramedTransportFactory',
+           socket: 'Thrift::ServerSocket',
+           server: 'Thrift::SimpleServer'
+          }
 parser = OptionParser.new do |op|
+  op.on '--host HOST', 'host to launch Thrift server on' do |host|
+    options[:host] = host
+  end
   op.on '-p', '--port PORT', 'port to launch Thrift server on' do |port|
     options[:port] = port.to_i
   end
   op.on '-t', '--thrift-command COMMAND', 'thrift compiler' do |cmd|
     options[:thrift_command] = cmd
+  end
+  op.on '--protocol PROTOCOL', 'protocol ( Thrift::CompactProtocolFactory, Thrift::BinaryProtocolFactory )' do |proto|
+    options[:protocol] = proto
+  end
+  op.on '--transport TRANSPORT', 'transport ( Thrift::BufferedTransportFactory, Thrift::FramedTransportFactory )' do |trans|
+    options[:transport] = trans
+  end
+  op.on '--socket SOCKET', 'socket ( Thrift::ServerSocket )' do |sock|
+    options[:socket] = sock
+  end
+  op.on '--server SERVER', 'server ( Thrift::SimpleServer )' do |serv|
+    options[:server] = serv
   end
   op.on '-h', '--help' do
     puts parser
@@ -27,10 +48,10 @@ end
 
 Dir.mktmpdir do |out|
   path = File.expand_path(File.join(File.dirname(__FILE__), 'example.thrift'))
-  puts (cmd = "#{options[:thrift_command]} --gen rb --out #{out} #{path}")
+  puts (cmd = "#{options[:thrift_command]} --gen rb:namespaced --out #{out} #{path}")
   puts `#{cmd}`
   $LOAD_PATH.unshift out
-  Dir["#{out}/*.rb"].each {|file| require file}
+  Dir["#{out}/**/*.rb"].each {|file| require file}
   $LOAD_PATH.delete out
 end
 
@@ -76,10 +97,12 @@ class ExampleServiceImpl
 end
 
 processor = ExampleServiceImpl::Processor.new(ExampleServiceImpl.new)
-transport = Thrift::ServerSocket.new('localhost', options[:port])
-transport_factory = Thrift::FramedTransportFactory.new
-protocol_factory = Thrift::CompactProtocolFactory.new
-server = Thrift::SimpleServer.new(processor, transport, transport_factory, protocol_factory)
 
-puts "Starting example service for localhost on port #{options[:port]}"
+# Here's the dynamic part
+socket = Object::const_get(options[:socket]).new(options[:host], options[:port])
+transport = Object::const_get(options[:transport]).new
+protocol = Object::const_get(options[:protocol]).new
+server = Object::const_get(options[:server]).new(processor, socket, transport, protocol)
+
+puts "Starting example service as #{options[:server]} #{options[:socket]} #{options[:transport]} #{options[:protocol]} for #{options[:host]} on port #{options[:port]}"
 server.serve

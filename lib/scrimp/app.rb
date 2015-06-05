@@ -56,8 +56,8 @@ module Scrimp
     end
 
     get '/transports' do
-      transports = {'Thrift::BufferedTransport'=>'Thrift::BufferedTransport',
-                    'Thrift::FramedTransport'=>'Thrift::FramedTransport'}
+      transports = {'Thrift::FramedTransport'=>'Thrift::FramedTransport',
+                    'Thrift::BufferedTransport'=>'Thrift::BufferedTransport'}
       content_type :json
       transports.to_json
     end

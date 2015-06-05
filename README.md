@@ -49,6 +49,8 @@ a string (`name`) and enum (`favoriteWord`):
       "service": "ExampleService",
       "function": "greet",
       "protocol": "Thrift::CompactProtocol",
+      "transport": "Thrift::FramedTransport",
+      "socket": "Thrift::Socket",
       "host": "localhost",
       "port": "9000",
       "args": {
